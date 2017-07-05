@@ -9,18 +9,18 @@ import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.subs.data.submittable.Sample;
 import uk.ac.ebi.subs.validator.data.SingleValidationResult;
-import uk.ac.ebi.subs.validator.data.ValidationAuthor;
 import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
 import uk.ac.ebi.subs.validator.data.ValidationStatus;
 import uk.ac.ebi.subs.validator.messaging.Exchanges;
 import uk.ac.ebi.subs.validator.messaging.Queues;
 import uk.ac.ebi.subs.validator.messaging.RoutingKeys;
 
-import java.util.UUID;
-
 @Service
 public class ValidatorListener {
     private static Logger logger = LoggerFactory.getLogger(ValidatorListener.class);
+
+    @Autowired
+    private BiosamplesValidator validator;
 
     private RabbitMessagingTemplate rabbitMessagingTemplate;
 
@@ -35,23 +35,13 @@ public class ValidatorListener {
         logger.debug("Got sample to validate.");
 
         Sample sample = (Sample) envelope.getEntityToValidate();
-        SingleValidationResult result = validate(sample);
+        SingleValidationResult result = validator.validateSample(sample);
 
         logger.debug("Validation done.");
 
         result.setValidationResultUUID(envelope.getValidationResultUUID());
 
         sendResults(result);
-    }
-
-    private SingleValidationResult validate(Sample sample) {
-        SingleValidationResult result = new SingleValidationResult();
-        result.setUuid(UUID.randomUUID().toString());
-        result.setEntityUuid(sample.getId());
-        result.setMessage("Valid sample.");
-        result.setValidationAuthor(ValidationAuthor.Biosamples);
-        result.setValidationStatus(ValidationStatus.Pass);
-        return result;
     }
 
     private void sendResults(SingleValidationResult singleValidationResult) {
