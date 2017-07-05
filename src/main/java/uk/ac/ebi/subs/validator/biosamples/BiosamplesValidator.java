@@ -19,16 +19,16 @@ import java.util.stream.Collectors;
 public class BiosamplesValidator {
     private static Logger logger = LoggerFactory.getLogger(BiosamplesValidator.class);
 
-    private final List<String> relationshipNatureValues = Arrays.asList("derived from", "child of", "same as", "recurated from");
+    private final List<String> relationshipNatureValues = Arrays.asList("derived from", "child of", "same as", "recurated from"); // FIXME - fill list from properties
 
-    private final String NAME_MISSING = "A sample must have an alias.";
+    public final String NAME_MISSING = "A sample must have an alias.";
 
     private final String MULTIPLE_DATES_ERROR = "A sample must only have ONE %s date.";
     private final String MISSING_DATE_VALUE = "A sample must have a %s date.";
 
     private final String SAMPLE_RELATIONSHIP_NULL = "When present, a SampleRelationship must not be null.";
     private final String SAMPLE_RELATIONSHIP_NATURE_MISSING = "A SampleRelationship must have a RelationshipNature.";
-    private final String SAMPLE_RELATIONSHIP_NATURE_UNKNOWN = "SampleRelationship [%s] unknown, please verify if you which to proceed.";
+    private final String SAMPLE_RELATIONSHIP_NATURE_UNKNOWN = "SampleRelationship nature: [%s] unknown, please verify if you wish to proceed.";
     private final String SAMPLE_RELATIONSHIP_TARGET_MISSING = "A SampleRelationship must have a sample accession target.";
 
     public SingleValidationResult validateSample(Sample sample) {
@@ -37,6 +37,10 @@ public class BiosamplesValidator {
         validateName(sample.getAlias(), singleValidationResult);
         validateDates(sample.getAttributes(), singleValidationResult);
         validateSampleRelationships(sample.getSampleRelationships(), singleValidationResult);
+
+        if (singleValidationResult.getValidationStatus().equals(ValidationStatus.Pending)) {
+            singleValidationResult.setValidationStatus(ValidationStatus.Complete);
+        }
 
         return singleValidationResult;
     }
@@ -96,8 +100,10 @@ public class BiosamplesValidator {
     }
 
     private void validateSampleRelationships(List<SampleRelationship> sampleRelationshipList, SingleValidationResult singleValidationResult) {
-        for (SampleRelationship relationship : sampleRelationshipList) {
-            validateSampleRelationship(relationship, singleValidationResult);
+        if(sampleRelationshipList != null && !sampleRelationshipList.isEmpty()) {
+            for (SampleRelationship relationship : sampleRelationshipList) {
+                validateSampleRelationship(relationship, singleValidationResult);
+            }
         }
     }
 
