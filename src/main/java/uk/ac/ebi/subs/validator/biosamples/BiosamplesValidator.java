@@ -10,6 +10,8 @@ import uk.ac.ebi.subs.validator.data.SingleValidationResult;
 import uk.ac.ebi.subs.validator.data.ValidationAuthor;
 import uk.ac.ebi.subs.validator.data.ValidationStatus;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -23,8 +25,9 @@ public class BiosamplesValidator {
 
     public final String NAME_MISSING = "A sample must have an alias.";
 
-    private final String MULTIPLE_DATES_ERROR = "A sample must only have ONE %s date.";
-    private final String MISSING_DATE_VALUE = "A sample must have a %s date.";
+    private final String MULTIPLE_DATES_ERROR = "A sample must only have ONE release date.";
+    private final String MISSING_DATE_VALUE = "A sample must have a release date.";
+    private final String DATE_WRONG_FORMAT = "The release date must comply with ISO 8601.";
 
     private final String SAMPLE_RELATIONSHIP_NULL = "When present, a SampleRelationship must not be null.";
     private final String SAMPLE_RELATIONSHIP_NATURE_MISSING = "A SampleRelationship must have a RelationshipNature.";
@@ -35,7 +38,7 @@ public class BiosamplesValidator {
         SingleValidationResult singleValidationResult = generateSingleValidationResult(sample);
 
         validateName(sample.getAlias(), singleValidationResult);
-        validateDates(sample.getAttributes(), singleValidationResult);
+        validateReleaseDate(sample.getAttributes(), singleValidationResult);
         validateSampleRelationships(sample.getSampleRelationships(), singleValidationResult);
 
         if (singleValidationResult.getValidationStatus().equals(ValidationStatus.Pending)) {
@@ -58,45 +61,44 @@ public class BiosamplesValidator {
     }
 
     /**
-     * Update and release dates must always be present and never more than once.
+     * Release date must always be present and never more than once.
      * @param attributes
      * @param singleValidationResult
      */
-    private void validateDates(List<Attribute> attributes, SingleValidationResult singleValidationResult) {
-        // Release date validation
+    private void validateReleaseDate(List<Attribute> attributes, SingleValidationResult singleValidationResult) {
         List<Attribute> releaseDates = attributes.stream()
                 .filter(
                 attribute -> attribute.getName().equals("release"))
                 .collect(Collectors.toList());
 
-        validateDates(releaseDates, singleValidationResult, "release");
+        if (releaseDates.size() > 1) {
+            setErrorMessage(singleValidationResult, MULTIPLE_DATES_ERROR);
+            return;
+        }
 
-        // Update date validation
-        List<Attribute> updateDates = attributes.stream()
-                .filter(
-                        attribute -> attribute.getName().equals("update"))
-                .collect(Collectors.toList());
+        if (releaseDates.size() == 1 && releaseDates.get(0) != null) {
+            if (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty()) {
+                singleValidationResult.setValidationStatus(ValidationStatus.Error);
+                setErrorMessage(singleValidationResult, MISSING_DATE_VALUE);
+            } else {
+                if (!validateDateFormat(releaseDates.get(0).getValue())) {
+                    singleValidationResult.setValidationStatus(ValidationStatus.Error);
+                    setErrorMessage(singleValidationResult, DATE_WRONG_FORMAT);
+                }
+            }
+        }
 
-        validateDates(updateDates, singleValidationResult, "update");
     }
 
-    /**
-     * Generic date presence validation.
-     * @param dates
-     * @param singleValidationResult
-     * @param date
-     */
-    private void validateDates(List<Attribute> dates, SingleValidationResult singleValidationResult, String date) {
-        if (dates.size() > 1) {
-            setErrorMessage(singleValidationResult, String.format(MULTIPLE_DATES_ERROR, date));
-        } else if (dates.get(0) != null) {
-            if (dates.get(0).getValue() == null || dates.get(0).getValue().isEmpty()) {
-                singleValidationResult.setValidationStatus(ValidationStatus.Error);
-                setErrorMessage(singleValidationResult, String.format(MISSING_DATE_VALUE, date));
-            }
-        } else {
-            setErrorMessage(singleValidationResult, String.format(MISSING_DATE_VALUE, date));
+    private boolean validateDateFormat(String releaseDate) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+            LocalDateTime.parse(releaseDate, formatter);
+        } catch (Exception e) {
+            logger.debug("Invalid date format: " + releaseDate);
+            return false;
         }
+        return true;
     }
 
     private void validateSampleRelationships(List<SampleRelationship> sampleRelationshipList, SingleValidationResult singleValidationResult) {
