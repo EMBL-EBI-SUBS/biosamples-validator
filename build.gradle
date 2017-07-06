@@ -1,10 +1,9 @@
 group 'uk.ac.ebi.subs'
-version '1.0.0-SNAPSHOT'
+version '0.1.0-SNAPSHOT'
 
 buildscript {
     repositories {
         mavenCentral()
-        maven { url 'https://jitpack.io' }
 
     }
     dependencies {
@@ -19,17 +18,17 @@ apply plugin: 'org.springframework.boot'
 
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 }
 
 sourceCompatibility = 1.8
 
 dependencies {
-    compile ("com.github.EMBL-EBI-SUBS:validator-common:master-SNAPSHOT") {
+    compile ("uk.ac.ebi.subs:validator-common:1.5.0-SNAPSHOT") {
         changing = true
         exclude group: 'org.springframework.boot', module :'spring-boot-starter-data-mongodb'
     }
 
     compile("org.springframework.boot:spring-boot-starter")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
 }
