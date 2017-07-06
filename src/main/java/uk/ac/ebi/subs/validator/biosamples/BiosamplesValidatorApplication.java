@@ -14,9 +14,4 @@ public class BiosamplesValidatorApplication {
     public static void main(String[] args) {
         SpringApplication.run(BiosamplesValidatorApplication.class, args);
     }
-
-    @Bean
-    public MessageConverter messageConverter() {
-        return new MappingJackson2MessageConverter();
-    }
 }
