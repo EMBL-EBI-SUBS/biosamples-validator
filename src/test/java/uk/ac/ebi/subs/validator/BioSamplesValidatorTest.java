@@ -5,18 +5,21 @@ import org.junit.Before;
 import org.junit.Test;
 import uk.ac.ebi.subs.data.submittable.Sample;
 import uk.ac.ebi.subs.validator.biosamples.BiosamplesValidator;
-import uk.ac.ebi.subs.validator.data.SingleValidationResult;
+import uk.ac.ebi.subs.validator.data.SingleValidationResultsEnvelope;
+import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
 import uk.ac.ebi.subs.validator.data.ValidationStatus;
 
 import java.util.Arrays;
 
 import static uk.ac.ebi.subs.validator.TestUtils.generateSample;
 import static uk.ac.ebi.subs.validator.TestUtils.generateSampleRelationship;
+import static uk.ac.ebi.subs.validator.TestUtils.generateValidationMessageEnvelope;
 
 public class BioSamplesValidatorTest {
 
     private BiosamplesValidator validator;
 
+    private ValidationMessageEnvelope envelope;
     private Sample sample;
 
     @Before
@@ -28,49 +31,54 @@ public class BioSamplesValidatorTest {
     @Test
     public void sampleAliasMissingTest() {
         sample.setAlias(null);
-        SingleValidationResult validationResult1 = validator.validateSample(sample);
-        Assert.assertTrue(validationResult1.getMessage().contains(validator.NAME_MISSING));
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResultEnvelope1 = validator.validateSample(envelope);
+        Assert.assertTrue(validationResultEnvelope1.getSingleValidationResults().get(0).getMessage().contains(validator.NAME_MISSING));
 
         sample.setAlias("");
-        SingleValidationResult validationResult2 = validator.validateSample(sample);
-        Assert.assertTrue(validationResult2.getMessage().contains(validator.NAME_MISSING));
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResultEnvelope2 = validator.validateSample(envelope);
+        Assert.assertTrue(validationResultEnvelope2.getSingleValidationResults().get(0).getMessage().contains(validator.NAME_MISSING));
     }
 
     @Test
     public void sampleReleaseDateMissingTest() {
         sample = generateSample("sampleAlias", "");
-        SingleValidationResult validationResult = validator.validateSample(sample);
-        Assert.assertTrue(validationResult.getMessage().contains("A sample must have a release date."));
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResult = validator.validateSample(envelope);
+        Assert.assertTrue(validationResult.getSingleValidationResults().get(0).getMessage().contains("A sample must have a release date."));
     }
 
     @Test
     public void sampleRelationshipNatureMissingTest() {
         sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "")));
-        SingleValidationResult validationResult = validator.validateSample(sample);
-        Assert.assertTrue(validationResult.getMessage().contains("A SampleRelationship must have a RelationshipNature."));
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResult = validator.validateSample(envelope);
+        Assert.assertTrue(validationResult.getSingleValidationResults().get(0).getMessage().contains("A SampleRelationship must have a RelationshipNature."));
     }
 
     @Test
     public void sampleRelationshipNatureUnknownTest() {
         sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "created from")));
-        SingleValidationResult validationResult = validator.validateSample(sample);
-        Assert.assertTrue(validationResult.getMessage().contains("unknown, please verify if you wish to proceed."));
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResult = validator.validateSample(envelope);
+        Assert.assertTrue(validationResult.getSingleValidationResults().get(0).getMessage().contains("unknown, please verify if you wish to proceed."));
     }
 
     @Test
     public void sampleRelationshipTargetMissingTest() {
         sample.setSampleRelationships(Arrays.asList(generateSampleRelationship(null, "derived from")));
-        SingleValidationResult validationResult = validator.validateSample(sample);
-        System.out.println(validationResult);
-        Assert.assertTrue(validationResult.getMessage().contains("A SampleRelationship must have a sample accession target."));
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResult = validator.validateSample(envelope);
+        Assert.assertTrue(validationResult.getSingleValidationResults().get(0).getMessage().contains("A SampleRelationship must have a sample accession target."));
     }
 
     @Test
     public void multipleWarningAndErrorsTest() {
         sample = generateSample("", "");
         sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "created from")));
-        SingleValidationResult validationResult = validator.validateSample(sample);
-        Assert.assertTrue(validationResult.getValidationStatus().equals(ValidationStatus.Error));
-
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResult = validator.validateSample(envelope);
+        Assert.assertTrue(validationResult.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Error));
     }
 }
