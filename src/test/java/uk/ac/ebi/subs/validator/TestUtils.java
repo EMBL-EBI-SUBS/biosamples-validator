@@ -3,6 +3,7 @@ package uk.ac.ebi.subs.validator;
 import uk.ac.ebi.subs.data.component.Attribute;
 import uk.ac.ebi.subs.data.component.SampleRelationship;
 import uk.ac.ebi.subs.data.submittable.Sample;
+import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -55,5 +56,13 @@ public class TestUtils {
         relationship.setAccession(accession);
         relationship.setRelationshipNature(nature);
         return relationship;
+    }
+
+    public static ValidationMessageEnvelope generateValidationMessageEnvelope(Sample sample) {
+        return new ValidationMessageEnvelope(
+                UUID.randomUUID().toString(),
+                1,
+                sample
+        );
     }
 }
