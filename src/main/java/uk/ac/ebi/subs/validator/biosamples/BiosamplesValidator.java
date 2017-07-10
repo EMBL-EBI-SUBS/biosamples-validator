@@ -7,12 +7,15 @@ import uk.ac.ebi.subs.data.component.Attribute;
 import uk.ac.ebi.subs.data.component.SampleRelationship;
 import uk.ac.ebi.subs.data.submittable.Sample;
 import uk.ac.ebi.subs.validator.data.SingleValidationResult;
+import uk.ac.ebi.subs.validator.data.SingleValidationResultsEnvelope;
 import uk.ac.ebi.subs.validator.data.ValidationAuthor;
+import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
 import uk.ac.ebi.subs.validator.data.ValidationStatus;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,8 +37,10 @@ public class BiosamplesValidator {
     private final String SAMPLE_RELATIONSHIP_NATURE_UNKNOWN = "SampleRelationship nature: [%s] unknown, please verify if you wish to proceed.";
     private final String SAMPLE_RELATIONSHIP_TARGET_MISSING = "A SampleRelationship must have a sample accession target.";
 
-    public SingleValidationResult validateSample(Sample sample) {
-        SingleValidationResult singleValidationResult = generateSingleValidationResult(sample);
+    public SingleValidationResultsEnvelope validateSample(ValidationMessageEnvelope envelope) {
+        Sample sample = (Sample) envelope.getEntityToValidate();
+
+        SingleValidationResult singleValidationResult = generateSingleValidationResult(sample, envelope.getValidationResultUUID());
 
         validateName(sample.getAlias(), singleValidationResult);
         validateReleaseDate(sample.getAttributes(), singleValidationResult);
@@ -45,7 +50,12 @@ public class BiosamplesValidator {
             singleValidationResult.setValidationStatus(ValidationStatus.Complete);
         }
 
-        return singleValidationResult;
+        return new SingleValidationResultsEnvelope(
+                Collections.singletonList(singleValidationResult),
+                envelope.getValidationResultVersion(),
+                envelope.getValidationResultUUID(),
+                ValidationAuthor.Biosamples
+        );
     }
 
     /**
@@ -143,9 +153,10 @@ public class BiosamplesValidator {
 
     // -- Helper Methods -- //
 
-    private SingleValidationResult generateSingleValidationResult(Sample sample) {
+    private SingleValidationResult generateSingleValidationResult(Sample sample, String validationResultUuid) {
         SingleValidationResult result = new SingleValidationResult();
         result.setUuid(UUID.randomUUID().toString());
+        result.setValidationResultUUID(validationResultUuid);
         result.setEntityUuid(sample.getId());
         result.setValidationAuthor(ValidationAuthor.Biosamples);
         result.setValidationStatus(ValidationStatus.Pending);
