@@ -8,6 +8,7 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE")
+        classpath 'org.hidetake:gradle-ssh-plugin:1.1.3'
     }
 }
 
@@ -15,6 +16,14 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'maven'
+apply plugin: 'org.hidetake.ssh'
+
+bootRepackage {
+    mainClass = "uk.ac.ebi.subs.validator.biosamples.BiosamplesValidatorApplication"
+}
+springBoot {
+    executable = true
+}
 
 repositories {
     mavenCentral()
@@ -24,7 +33,7 @@ repositories {
 sourceCompatibility = 1.8
 
 dependencies {
-    compile ("uk.ac.ebi.subs:validator-common:1.11.0-SNAPSHOT") {
+    compile ("uk.ac.ebi.subs:validator-common:1.13.0-SNAPSHOT") {
         exclude group: 'org.springframework.boot', module :'spring-boot-starter-data-mongodb'
     }
 
@@ -73,5 +82,60 @@ uploadArchives {
                 }
             }
         }
+    }
+}
+
+ssh.settings {
+    user = 'sub_adm'
+}
+
+if (project.hasProperty('sshKeyFile')) {
+    ssh.settings.identity = new File(sshKeyFile)
+}
+
+if (project.hasProperty('sshPassphrase')) {
+    ssh.settings.passphrase = sshPassphrase
+}
+
+task printJarName {
+    doLast {
+        println "$jar.archivePath.name"
+    }
+
+}
+
+task printJarFullPath {
+    doLast {
+        println "$jar.archivePath.absolutePath"
+    }
+}
+
+remotes {
+    staging {
+        role('staging')
+        host = 'mac-subs-006'
+    }
+}
+
+task deployJar(type: SshTask, dependsOn: 'assemble') {
+    doLast {
+        def deployHome = "/data/" + project.name;
+        File jarDeployDir = new File(deployHome,"jar")
+
+        ssh.run {
+            session(remotes.staging) {
+                println "Creating $project.name directory in /data"
+                execute "/data/create_dirs.sh $project.name", ignoreError: false
+                println "Uploading jar $jar.archivePath.name to $jarDeployDir area on $remote"
+                put(jar.archivePath.absolutePath, jarDeployDir.absolutePath)
+                println "creating symbolic link to $jar.archiveName"
+                def result = execute "ln -s -f $jarDeployDir/$jar.archiveName $jarDeployDir/$jar.baseName" + ".jar", ignoreError: true
+                println result
+
+            }
+        }
+    }
+    ssh.settings {
+        knownHosts = allowAnyHosts
     }
 }
