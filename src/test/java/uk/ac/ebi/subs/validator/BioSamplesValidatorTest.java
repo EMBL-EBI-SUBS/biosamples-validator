@@ -29,11 +29,19 @@ public class BioSamplesValidatorTest {
     }
 
     @Test
+    public void sampleOkTest() {
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Pass));
+    }
+
+    @Test
     public void sampleAliasMissingTest() {
         sample.setAlias(null);
         envelope = generateValidationMessageEnvelope(sample);
         SingleValidationResultsEnvelope validationResultEnvelope1 = validator.validateSample(envelope);
         Assert.assertTrue(validationResultEnvelope1.getSingleValidationResults().get(0).getMessage().contains(validator.NAME_MISSING));
+        Assert.assertTrue(validationResultEnvelope1.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Error));
 
         sample.setAlias("");
         envelope = generateValidationMessageEnvelope(sample);
