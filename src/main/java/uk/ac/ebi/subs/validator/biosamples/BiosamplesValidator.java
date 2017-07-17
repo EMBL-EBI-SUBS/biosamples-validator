@@ -47,7 +47,7 @@ public class BiosamplesValidator {
         validateSampleRelationships(sample.getSampleRelationships(), singleValidationResult);
 
         if (singleValidationResult.getValidationStatus().equals(ValidationStatus.Pending)) {
-            singleValidationResult.setValidationStatus(ValidationStatus.Complete);
+            singleValidationResult.setValidationStatus(ValidationStatus.Pass);
         }
 
         return new SingleValidationResultsEnvelope(
@@ -154,12 +154,9 @@ public class BiosamplesValidator {
     // -- Helper Methods -- //
 
     private SingleValidationResult generateSingleValidationResult(Sample sample, String validationResultUuid) {
-        SingleValidationResult result = new SingleValidationResult();
+        SingleValidationResult result = new SingleValidationResult(ValidationAuthor.Biosamples, sample.getId());
         result.setUuid(UUID.randomUUID().toString());
         result.setValidationResultUUID(validationResultUuid);
-        result.setEntityUuid(sample.getId());
-        result.setValidationAuthor(ValidationAuthor.Biosamples);
-        result.setValidationStatus(ValidationStatus.Pending);
         return result;
     }
 
