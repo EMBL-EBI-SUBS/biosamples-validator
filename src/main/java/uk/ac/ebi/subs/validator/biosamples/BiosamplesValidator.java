@@ -30,7 +30,7 @@ public class BiosamplesValidator {
 
     private final String MULTIPLE_DATES_ERROR = "A sample must only have ONE release date.";
     private final String MISSING_DATE_VALUE = "A sample must have a release date.";
-    private final String DATE_WRONG_FORMAT = "The release date must comply with ISO 8601.";
+    private final String DATE_WRONG_FORMAT = "The release date must comply with ISO 8601";
 
     private final String SAMPLE_RELATIONSHIP_NULL = "When present, a SampleRelationship must not be null.";
     private final String SAMPLE_RELATIONSHIP_NATURE_MISSING = "A SampleRelationship must have a RelationshipNature.";
@@ -65,8 +65,8 @@ public class BiosamplesValidator {
      */
     private void validateName(String alias, SingleValidationResult singleValidationResult) {
         if (alias == null || alias.isEmpty()) {
-            singleValidationResult.setValidationStatus(ValidationStatus.Error);
             setErrorMessage(singleValidationResult, NAME_MISSING);
+            singleValidationResult.setValidationStatus(ValidationStatus.Error);
         }
     }
 
@@ -83,18 +83,16 @@ public class BiosamplesValidator {
 
         if (releaseDates.size() > 1) {
             setErrorMessage(singleValidationResult, MULTIPLE_DATES_ERROR);
+            singleValidationResult.setValidationStatus(ValidationStatus.Error);
             return;
         }
 
         if (releaseDates.size() == 1 && releaseDates.get(0) != null) {
             if (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty()) {
-                singleValidationResult.setValidationStatus(ValidationStatus.Error);
                 setErrorMessage(singleValidationResult, MISSING_DATE_VALUE);
+                singleValidationResult.setValidationStatus(ValidationStatus.Error);
             } else {
-                if (!validateDateFormat(releaseDates.get(0).getValue())) {
-                    singleValidationResult.setValidationStatus(ValidationStatus.Error);
-                    setErrorMessage(singleValidationResult, DATE_WRONG_FORMAT);
-                }
+                validateDateFormat(releaseDates.get(0).getValue(), singleValidationResult);
             }
         } else {
             singleValidationResult.setValidationStatus(ValidationStatus.Error);
@@ -103,15 +101,16 @@ public class BiosamplesValidator {
 
     }
 
-    private boolean validateDateFormat(String releaseDate) {
+    private void validateDateFormat(String releaseDate, SingleValidationResult singleValidationResult) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
             LocalDateTime.parse(releaseDate, formatter);
         } catch (Exception e) {
             logger.debug("Invalid date format: " + releaseDate);
-            return false;
+
+            setErrorMessage(singleValidationResult, DATE_WRONG_FORMAT + ": " + e.getMessage());
+            singleValidationResult.setValidationStatus(ValidationStatus.Error);
         }
-        return true;
     }
 
     private void validateSampleRelationships(List<SampleRelationship> sampleRelationshipList, SingleValidationResult singleValidationResult) {
