@@ -96,6 +96,9 @@ public class BiosamplesValidator {
                     setErrorMessage(singleValidationResult, DATE_WRONG_FORMAT);
                 }
             }
+        } else {
+            singleValidationResult.setValidationStatus(ValidationStatus.Error);
+            setErrorMessage(singleValidationResult, MISSING_DATE_VALUE);
         }
 
     }
