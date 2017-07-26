@@ -14,8 +14,8 @@ import uk.ac.ebi.subs.validator.data.ValidationStatus;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,91 +40,97 @@ public class BiosamplesValidator {
     public SingleValidationResultsEnvelope validateSample(ValidationMessageEnvelope envelope) {
         Sample sample = (Sample) envelope.getEntityToValidate();
 
-        SingleValidationResult singleValidationResult = generateSingleValidationResult(sample, envelope.getValidationResultUUID());
+        List<SingleValidationResult> singleValidationResults = new ArrayList<>();
 
-        validateName(sample.getAlias(), singleValidationResult);
-        validateReleaseDate(sample.getAttributes(), singleValidationResult);
-        validateSampleRelationships(sample.getSampleRelationships(), singleValidationResult);
+        singleValidationResults.add(validateSampleName(sample));
+        singleValidationResults.add(validateReleaseDate(sample));
+        singleValidationResults.addAll(validateSampleRelationships(sample));
 
-        if (singleValidationResult.getValidationStatus().equals(ValidationStatus.Pending)) {
-            singleValidationResult.setValidationStatus(ValidationStatus.Pass);
+        // List of errors and/or warnings
+        List errorsList = singleValidationResults.stream().filter(singleValidationResult -> !singleValidationResult.getValidationStatus().equals(ValidationStatus.Pass)).collect(Collectors.toList());
+        if (!errorsList.isEmpty()) {
+            return generateSingleValidationResultsEnvelope(errorsList, envelope);
+        } else {
+            return generateSingleValidationResultsEnvelope(Arrays.asList(generateDefaultSingleValidationResult(sample.getId())), envelope);
         }
 
-        return new SingleValidationResultsEnvelope(
-                Collections.singletonList(singleValidationResult),
-                envelope.getValidationResultVersion(),
-                envelope.getValidationResultUUID(),
-                ValidationAuthor.Biosamples
-        );
     }
 
     /**
      * A name in the biosamples sample object is the same as the alias in the USI sample object.
-     * @param alias
-     * @param singleValidationResult
+     * @param sample
+     *
      */
-    private void validateName(String alias, SingleValidationResult singleValidationResult) {
+    private SingleValidationResult validateSampleName(Sample sample) {
+        String alias = sample.getAlias();
+        SingleValidationResult singleValidationResult = generateDefaultSingleValidationResult(sample.getId());
+
         if (alias == null || alias.isEmpty()) {
-            setErrorMessage(singleValidationResult, NAME_MISSING);
             singleValidationResult.setValidationStatus(ValidationStatus.Error);
+            singleValidationResult.setMessage(NAME_MISSING);
         }
+        return singleValidationResult;
     }
 
     /**
      * Release date must always be present and never more than once.
-     * @param attributes
-     * @param singleValidationResult
+     * @param sample
      */
-    private void validateReleaseDate(List<Attribute> attributes, SingleValidationResult singleValidationResult) {
+    private SingleValidationResult validateReleaseDate(Sample sample) {
+        List<Attribute> attributes = sample.getAttributes();
+        SingleValidationResult singleValidationResult = generateDefaultSingleValidationResult(sample.getId());
+
+        // FIXME - This is a temporary solution, it will be changed once the release date is an actual field and not an attribute.
         List<Attribute> releaseDates = attributes.stream()
                 .filter(
-                attribute -> attribute.getName().equals("release"))
+                attribute -> attribute.getName().toLowerCase().equals("release"))
                 .collect(Collectors.toList());
 
         if (releaseDates.size() > 1) {
-            setErrorMessage(singleValidationResult, MULTIPLE_DATES_ERROR);
             singleValidationResult.setValidationStatus(ValidationStatus.Error);
-            return;
+            singleValidationResult.setMessage(MULTIPLE_DATES_ERROR);
+            return singleValidationResult;
         }
 
-        if (releaseDates.size() == 1 && releaseDates.get(0) != null) {
-            if (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty()) {
-                setErrorMessage(singleValidationResult, MISSING_DATE_VALUE);
-                singleValidationResult.setValidationStatus(ValidationStatus.Error);
-            } else {
-                validateDateFormat(releaseDates.get(0).getValue(), singleValidationResult);
-            }
-        } else {
+        if (releaseDates.size() == 1 && releaseDates.get(0) != null && (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty())) {
             singleValidationResult.setValidationStatus(ValidationStatus.Error);
-            setErrorMessage(singleValidationResult, MISSING_DATE_VALUE);
+            singleValidationResult.setMessage(MISSING_DATE_VALUE);
+            return singleValidationResult;
         }
 
-    }
-
-    private void validateDateFormat(String releaseDate, SingleValidationResult singleValidationResult) {
+        String releaseDate = releaseDates.get(0).getValue();
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
             LocalDateTime.parse(releaseDate, formatter);
         } catch (Exception e) {
             logger.debug("Invalid date format: " + releaseDate);
-
-            setErrorMessage(singleValidationResult, DATE_WRONG_FORMAT + ": " + e.getMessage());
             singleValidationResult.setValidationStatus(ValidationStatus.Error);
+            singleValidationResult.setMessage(DATE_WRONG_FORMAT + ": " + e.getMessage());
         }
+
+        return singleValidationResult;
     }
 
-    private void validateSampleRelationships(List<SampleRelationship> sampleRelationshipList, SingleValidationResult singleValidationResult) {
-        if(sampleRelationshipList != null && !sampleRelationshipList.isEmpty()) {
-            for (SampleRelationship relationship : sampleRelationshipList) {
-                validateSampleRelationship(relationship, singleValidationResult);
-            }
+    /**
+     * Iterate over a List of SampleRelationship
+     * @param sample
+     */
+    private List<SingleValidationResult> validateSampleRelationships(Sample sample) {
+        List<SampleRelationship> sampleRelationshipList = sample.getSampleRelationships();
+        List<SingleValidationResult> singleValidationResults = new ArrayList<>();
+
+        for (SampleRelationship relationship : sampleRelationshipList) {
+            SingleValidationResult singleValidationResult = generateDefaultSingleValidationResult(sample.getId());
+            validateSampleRelationship(relationship, singleValidationResult);
+            singleValidationResults.add(singleValidationResult);
         }
+
+        return singleValidationResults;
     }
 
     /**
      * If present, sample relationships must have a nature and target.
      * @param sampleRelationship
-     * @param singleValidationResult
      */
     private void validateSampleRelationship(SampleRelationship sampleRelationship, SingleValidationResult singleValidationResult) {
         if (sampleRelationship != null) {
@@ -132,42 +138,38 @@ public class BiosamplesValidator {
             // Check for nature
             if (sampleRelationship.getRelationshipNature() == null || sampleRelationship.getRelationshipNature().isEmpty()) {
                 singleValidationResult.setValidationStatus(ValidationStatus.Error);
-                setErrorMessage(singleValidationResult, SAMPLE_RELATIONSHIP_NATURE_MISSING);
-            } else {
-                if (!relationshipNatureValues.contains(sampleRelationship.getRelationshipNature())) {
-                    if (singleValidationResult.getValidationStatus().equals(ValidationStatus.Pending)) {
-                        singleValidationResult.setValidationStatus(ValidationStatus.Warning);
-                    }
-                    setErrorMessage(singleValidationResult, String.format(SAMPLE_RELATIONSHIP_NATURE_UNKNOWN, sampleRelationship.getRelationshipNature()));
-                }
+                singleValidationResult.setMessage(SAMPLE_RELATIONSHIP_NATURE_MISSING);
+                return;
             }
 
             // Check for target
             if (sampleRelationship.getAccession() == null || sampleRelationship.getAccession().isEmpty()) {
                 singleValidationResult.setValidationStatus(ValidationStatus.Error);
-                setErrorMessage(singleValidationResult, SAMPLE_RELATIONSHIP_TARGET_MISSING);
+                singleValidationResult.setMessage(SAMPLE_RELATIONSHIP_TARGET_MISSING);
+                return;
             }
+
+            // Check known nature
+            if (!relationshipNatureValues.contains(sampleRelationship.getRelationshipNature())) {
+                singleValidationResult.setValidationStatus(ValidationStatus.Warning);
+                singleValidationResult.setMessage(String.format(SAMPLE_RELATIONSHIP_NATURE_UNKNOWN, sampleRelationship.getRelationshipNature()));
+                return;
+            }
+
         } else {
             singleValidationResult.setValidationStatus(ValidationStatus.Error);
-            setErrorMessage(singleValidationResult, SAMPLE_RELATIONSHIP_NULL);
+            singleValidationResult.setMessage(SAMPLE_RELATIONSHIP_NULL);
         }
     }
 
-    // -- Helper Methods -- //
-
-    private SingleValidationResult generateSingleValidationResult(Sample sample, String validationResultUuid) {
-        SingleValidationResult result = new SingleValidationResult(ValidationAuthor.Biosamples, sample.getId());
+    private SingleValidationResult generateDefaultSingleValidationResult(String sampleId) {
+        SingleValidationResult result = new SingleValidationResult(ValidationAuthor.Biosamples, sampleId);
         result.setUuid(UUID.randomUUID().toString());
-        result.setValidationResultUUID(validationResultUuid);
+        result.setValidationStatus(ValidationStatus.Pass);
         return result;
     }
 
-    private void setErrorMessage(SingleValidationResult singleValidationResult, String message) {
-        if (singleValidationResult.getValidationStatus().equals(ValidationStatus.Pending)) {
-            singleValidationResult.setMessage(message);
-        } else {
-            String composedMessage = singleValidationResult.getMessage() + " " + message;
-            singleValidationResult.setMessage(composedMessage);
-        }
+    private SingleValidationResultsEnvelope generateSingleValidationResultsEnvelope(List<SingleValidationResult> singleValidationResults, ValidationMessageEnvelope envelope) {
+        return new SingleValidationResultsEnvelope(singleValidationResults, envelope.getValidationResultVersion(), envelope.getValidationResultUUID(), ValidationAuthor.Biosamples);
     }
 }
