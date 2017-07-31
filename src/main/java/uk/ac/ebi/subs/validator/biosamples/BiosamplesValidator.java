@@ -92,11 +92,12 @@ public class BiosamplesValidator {
             return singleValidationResult;
         }
 
-        if (releaseDates.size() == 1 && releaseDates.get(0) != null && (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty())) {
+        if (releaseDates.isEmpty() || (releaseDates.size() == 1 && releaseDates.get(0) != null && (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty()))) {
             singleValidationResult.setValidationStatus(ValidationStatus.Error);
             singleValidationResult.setMessage(MISSING_DATE_VALUE);
             return singleValidationResult;
         }
+
 
         String releaseDate = releaseDates.get(0).getValue();
         try {
