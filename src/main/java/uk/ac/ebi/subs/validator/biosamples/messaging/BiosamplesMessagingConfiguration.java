@@ -41,13 +41,13 @@ public class BiosamplesMessagingConfiguration {
      * using the routing key of created samples related to BioSamples.
      *
      * @param biosamplesSampleQueue {@link Queue} for validating BioSamples related samples
-     * @param validationExchange {@link TopicExchange} for validation
+     * @param submissionExchange {@link TopicExchange} for validation
      * @return a {@link Binding} between the validation exchange and BioSamples sample validation queue
      * using the routing key of created samples related to BioSamples.
      */
     @Bean
-    Binding validationForCreatedBiosamplesSampleBinding(Queue biosamplesSampleQueue, TopicExchange validationExchange) {
-        return BindingBuilder.bind(biosamplesSampleQueue).to(validationExchange)
+    Binding validationForCreatedBiosamplesSampleBinding(Queue biosamplesSampleQueue, TopicExchange submissionExchange) {
+        return BindingBuilder.bind(biosamplesSampleQueue).to(submissionExchange)
                 .with(RoutingKeys.EVENT_BIOSAMPLES_SAMPLE_VALIDATION);
     }
 }
