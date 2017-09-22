@@ -8,16 +8,15 @@ import uk.ac.ebi.subs.data.component.SampleRelationship;
 import uk.ac.ebi.subs.data.submittable.Sample;
 import uk.ac.ebi.subs.validator.data.SingleValidationResult;
 import uk.ac.ebi.subs.validator.data.SingleValidationResultsEnvelope;
-import uk.ac.ebi.subs.validator.data.ValidationAuthor;
 import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
-import uk.ac.ebi.subs.validator.data.ValidationStatus;
+import uk.ac.ebi.subs.validator.data.structures.SingleValidationResultStatus;
+import uk.ac.ebi.subs.validator.data.structures.ValidationAuthor;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,7 +46,7 @@ public class BiosamplesValidator {
         singleValidationResults.addAll(validateSampleRelationships(sample));
 
         // List of errors and/or warnings
-        List errorsList = singleValidationResults.stream().filter(singleValidationResult -> !singleValidationResult.getValidationStatus().equals(ValidationStatus.Pass)).collect(Collectors.toList());
+        List errorsList = singleValidationResults.stream().filter(singleValidationResult -> !singleValidationResult.getValidationStatus().equals(SingleValidationResultStatus.Pass)).collect(Collectors.toList());
         if (!errorsList.isEmpty()) {
             return generateSingleValidationResultsEnvelope(errorsList, envelope);
         } else {
@@ -66,7 +65,7 @@ public class BiosamplesValidator {
         SingleValidationResult singleValidationResult = generateDefaultSingleValidationResult(sample.getId());
 
         if (alias == null || alias.isEmpty()) {
-            singleValidationResult.setValidationStatus(ValidationStatus.Error);
+            singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
             singleValidationResult.setMessage(NAME_MISSING);
         }
         return singleValidationResult;
@@ -87,13 +86,13 @@ public class BiosamplesValidator {
                 .collect(Collectors.toList());
 
         if (releaseDates.size() > 1) {
-            singleValidationResult.setValidationStatus(ValidationStatus.Error);
+            singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
             singleValidationResult.setMessage(MULTIPLE_DATES_ERROR);
             return singleValidationResult;
         }
 
         if (releaseDates.isEmpty() || (releaseDates.size() == 1 && releaseDates.get(0) != null && (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty()))) {
-            singleValidationResult.setValidationStatus(ValidationStatus.Error);
+            singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
             singleValidationResult.setMessage(MISSING_DATE_VALUE);
             return singleValidationResult;
         }
@@ -105,7 +104,7 @@ public class BiosamplesValidator {
             LocalDateTime.parse(releaseDate, formatter);
         } catch (Exception e) {
             logger.debug("Invalid date format: " + releaseDate);
-            singleValidationResult.setValidationStatus(ValidationStatus.Error);
+            singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
             singleValidationResult.setMessage(DATE_WRONG_FORMAT + ": " + e.getMessage());
         }
 
@@ -138,35 +137,34 @@ public class BiosamplesValidator {
 
             // Check for nature
             if (sampleRelationship.getRelationshipNature() == null || sampleRelationship.getRelationshipNature().isEmpty()) {
-                singleValidationResult.setValidationStatus(ValidationStatus.Error);
+                singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
                 singleValidationResult.setMessage(SAMPLE_RELATIONSHIP_NATURE_MISSING);
                 return;
             }
 
             // Check for target
             if (sampleRelationship.getAccession() == null || sampleRelationship.getAccession().isEmpty()) {
-                singleValidationResult.setValidationStatus(ValidationStatus.Error);
+                singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
                 singleValidationResult.setMessage(SAMPLE_RELATIONSHIP_TARGET_MISSING);
                 return;
             }
 
             // Check known nature
             if (!relationshipNatureValues.contains(sampleRelationship.getRelationshipNature())) {
-                singleValidationResult.setValidationStatus(ValidationStatus.Warning);
+                singleValidationResult.setValidationStatus(SingleValidationResultStatus.Warning);
                 singleValidationResult.setMessage(String.format(SAMPLE_RELATIONSHIP_NATURE_UNKNOWN, sampleRelationship.getRelationshipNature()));
                 return;
             }
 
         } else {
-            singleValidationResult.setValidationStatus(ValidationStatus.Error);
+            singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
             singleValidationResult.setMessage(SAMPLE_RELATIONSHIP_NULL);
         }
     }
 
     private SingleValidationResult generateDefaultSingleValidationResult(String sampleId) {
         SingleValidationResult result = new SingleValidationResult(ValidationAuthor.Biosamples, sampleId);
-        result.setUuid(UUID.randomUUID().toString());
-        result.setValidationStatus(ValidationStatus.Pass);
+        result.setValidationStatus(SingleValidationResultStatus.Pass);
         return result;
     }
 

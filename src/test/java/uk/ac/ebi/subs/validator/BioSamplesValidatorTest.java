@@ -7,7 +7,7 @@ import uk.ac.ebi.subs.data.submittable.Sample;
 import uk.ac.ebi.subs.validator.biosamples.BiosamplesValidator;
 import uk.ac.ebi.subs.validator.data.SingleValidationResultsEnvelope;
 import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
-import uk.ac.ebi.subs.validator.data.ValidationStatus;
+import uk.ac.ebi.subs.validator.data.structures.SingleValidationResultStatus;
 
 import java.util.Arrays;
 
@@ -34,7 +34,7 @@ public class BioSamplesValidatorTest {
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Pass));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Pass));
         Assert.assertEquals(null, validationResultsEnvelope.getSingleValidationResults().get(0).getMessage());
     }
 
@@ -45,7 +45,7 @@ public class BioSamplesValidatorTest {
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Error));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Error));
         Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith(validator.NAME_MISSING));
     }
 
@@ -56,7 +56,7 @@ public class BioSamplesValidatorTest {
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Error));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Error));
         Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith(validator.NAME_MISSING));
     }
 
@@ -67,7 +67,7 @@ public class BioSamplesValidatorTest {
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Error));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Error));
         Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith("A sample must have a release date."));
     }
 
@@ -78,7 +78,7 @@ public class BioSamplesValidatorTest {
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Error));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Error));
         Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith("A SampleRelationship must have a RelationshipNature."));
     }
 
@@ -89,7 +89,7 @@ public class BioSamplesValidatorTest {
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Warning));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Warning));
         Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().contains("unknown, please verify if you wish to proceed."));
     }
 
@@ -100,7 +100,7 @@ public class BioSamplesValidatorTest {
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Error));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Error));
         Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith("A SampleRelationship must have a sample accession target."));
     }
 
@@ -112,8 +112,8 @@ public class BioSamplesValidatorTest {
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(3, validationResultsEnvelope.getSingleValidationResults().size());
-        Assert.assertTrue(!validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(ValidationStatus.Pass));
-        Assert.assertTrue(!validationResultsEnvelope.getSingleValidationResults().get(1).getValidationStatus().equals(ValidationStatus.Pass));
-        Assert.assertTrue(!validationResultsEnvelope.getSingleValidationResults().get(2).getValidationStatus().equals(ValidationStatus.Pass));
+        Assert.assertTrue(!validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Pass));
+        Assert.assertTrue(!validationResultsEnvelope.getSingleValidationResults().get(1).getValidationStatus().equals(SingleValidationResultStatus.Pass));
+        Assert.assertTrue(!validationResultsEnvelope.getSingleValidationResults().get(2).getValidationStatus().equals(SingleValidationResultStatus.Pass));
     }
 }
