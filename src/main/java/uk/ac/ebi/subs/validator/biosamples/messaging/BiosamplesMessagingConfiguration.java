@@ -4,13 +4,14 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import uk.ac.ebi.subs.validator.messaging.Queues;
-import uk.ac.ebi.subs.validator.messaging.RoutingKeys;
-import uk.ac.ebi.subs.validator.messaging.ValidationExchangeConfig;
+import uk.ac.ebi.subs.messaging.ExchangeConfig;
+import uk.ac.ebi.subs.messaging.Queues;
+
+import static uk.ac.ebi.subs.validator.biosamples.messaging.BiosamplesValidatorQueues.BIOSAMPLES_SAMPLE_VALIDATION;
+import static uk.ac.ebi.subs.validator.biosamples.messaging.BiosamplesValidatorRoutingKeys.EVENT_BIOSAMPLES_SAMPLE_VALIDATION;
 
 /**
  * RabbitMQ related messaging configuration for the Biosamples queue(s) and binding(s).
@@ -18,13 +19,8 @@ import uk.ac.ebi.subs.validator.messaging.ValidationExchangeConfig;
  * Created by karoly on 06/07/2017.
  */
 @Configuration
-@ComponentScan(basePackageClasses = ValidationExchangeConfig.class)
+@ComponentScan(basePackageClasses = ExchangeConfig.class)
 public class BiosamplesMessagingConfiguration {
-
-    @Bean
-    public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
 
     /**
      * Instantiate a {@link Queue} for validate samples related to BioSamples.
@@ -33,7 +29,7 @@ public class BiosamplesMessagingConfiguration {
      */
     @Bean
     Queue biosamplesSampleQueue() {
-        return new Queue(Queues.BIOSAMPLES_SAMPLE_VALIDATION, true);
+        return Queues.buildQueueWithDlx(BIOSAMPLES_SAMPLE_VALIDATION);
     }
 
     /**
@@ -48,6 +44,6 @@ public class BiosamplesMessagingConfiguration {
     @Bean
     Binding validationForCreatedBiosamplesSampleBinding(Queue biosamplesSampleQueue, TopicExchange submissionExchange) {
         return BindingBuilder.bind(biosamplesSampleQueue).to(submissionExchange)
-                .with(RoutingKeys.EVENT_BIOSAMPLES_SAMPLE_VALIDATION);
+                .with(EVENT_BIOSAMPLES_SAMPLE_VALIDATION);
     }
 }

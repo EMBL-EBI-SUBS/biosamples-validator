@@ -7,16 +7,18 @@ import org.springframework.amqp.rabbit.core.RabbitMessagingTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.ac.ebi.subs.data.submittable.Sample;
+import uk.ac.ebi.subs.messaging.Exchanges;
 import uk.ac.ebi.subs.validator.data.SingleValidationResult;
 import uk.ac.ebi.subs.validator.data.SingleValidationResultsEnvelope;
 import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
 import uk.ac.ebi.subs.validator.data.structures.SingleValidationResultStatus;
-import uk.ac.ebi.subs.validator.messaging.Exchanges;
-import uk.ac.ebi.subs.validator.messaging.Queues;
-import uk.ac.ebi.subs.validator.messaging.RoutingKeys;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static uk.ac.ebi.subs.validator.biosamples.messaging.BiosamplesValidatorQueues.BIOSAMPLES_SAMPLE_VALIDATION;
+import static uk.ac.ebi.subs.validator.biosamples.messaging.BiosamplesValidatorRoutingKeys.EVENT_VALIDATION_ERROR;
+import static uk.ac.ebi.subs.validator.biosamples.messaging.BiosamplesValidatorRoutingKeys.EVENT_VALIDATION_SUCCESS;
 
 @Service
 public class ValidatorListener {
@@ -32,7 +34,7 @@ public class ValidatorListener {
         this.rabbitMessagingTemplate = rabbitMessagingTemplate;
     }
 
-    @RabbitListener(queues = Queues.BIOSAMPLES_SAMPLE_VALIDATION)
+    @RabbitListener(queues = BIOSAMPLES_SAMPLE_VALIDATION)
     public void handleValidationRequest(ValidationMessageEnvelope<Sample> envelope) {
         logger.info("Received validation request on sample with id {}", envelope.getEntityToValidate().getId());
 
@@ -44,9 +46,9 @@ public class ValidatorListener {
     private void sendResults(SingleValidationResultsEnvelope envelope) {
         List<SingleValidationResult> errorResults = envelope.getSingleValidationResults().stream().filter(svr -> svr.getValidationStatus().equals(SingleValidationResultStatus.Error)).collect(Collectors.toList());
         if (errorResults.size() > 0) {
-            rabbitMessagingTemplate.convertAndSend(Exchanges.SUBMISSIONS, RoutingKeys.EVENT_VALIDATION_ERROR, envelope);
+            rabbitMessagingTemplate.convertAndSend(Exchanges.SUBMISSIONS, EVENT_VALIDATION_ERROR, envelope);
         } else {
-            rabbitMessagingTemplate.convertAndSend(Exchanges.SUBMISSIONS, RoutingKeys.EVENT_VALIDATION_SUCCESS, envelope);
+            rabbitMessagingTemplate.convertAndSend(Exchanges.SUBMISSIONS, EVENT_VALIDATION_SUCCESS, envelope);
         }
     }
 
