@@ -91,7 +91,7 @@ public class BiosamplesValidator {
             return singleValidationResult;
         }
 
-        if (releaseDates.isEmpty() || (releaseDates.size() == 1 && releaseDates.get(0) != null && (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty()))) {
+        if (releaseDates.isEmpty() || (releaseDates.get(0) != null && (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty()))) {
             singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
             singleValidationResult.setMessage(MISSING_DATE_VALUE);
             return singleValidationResult;
@@ -113,7 +113,7 @@ public class BiosamplesValidator {
 
     /**
      * Iterate over a List of SampleRelationship
-     * @param sample
+     * @param sample to get the {@link SampleRelationship} property from
      */
     private List<SingleValidationResult> validateSampleRelationships(Sample sample) {
         List<SampleRelationship> sampleRelationshipList = sample.getSampleRelationships();
@@ -153,7 +153,6 @@ public class BiosamplesValidator {
             if (!relationshipNatureValues.contains(sampleRelationship.getRelationshipNature())) {
                 singleValidationResult.setValidationStatus(SingleValidationResultStatus.Warning);
                 singleValidationResult.setMessage(String.format(SAMPLE_RELATIONSHIP_NATURE_UNKNOWN, sampleRelationship.getRelationshipNature()));
-                return;
             }
 
         } else {

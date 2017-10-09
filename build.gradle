@@ -1,5 +1,5 @@
 group 'uk.ac.ebi.subs'
-version '0.2.3-SNAPSHOT'
+version '0.3.0-SNAPSHOT'
 
 buildscript {
     repositories {
@@ -34,7 +34,7 @@ sourceCompatibility = 1.8
 
 dependencies {
 
-    compile ("uk.ac.ebi.subs:validator-common:0.4.0-SNAPSHOT") {
+    compile ("uk.ac.ebi.subs:validator-common:0.6.0-SNAPSHOT") {
         exclude group: 'org.springframework.boot', module :'spring-boot-starter-data-mongodb'
     }
     compile("uk.ac.ebi.subs:subs-messaging:0.3.0-SNAPSHOT")
