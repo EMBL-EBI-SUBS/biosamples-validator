@@ -6,11 +6,10 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitMessagingTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.ac.ebi.subs.data.submittable.Sample;
 import uk.ac.ebi.subs.messaging.Exchanges;
+import uk.ac.ebi.subs.validator.data.SampleValidationMessageEnvelope;
 import uk.ac.ebi.subs.validator.data.SingleValidationResult;
 import uk.ac.ebi.subs.validator.data.SingleValidationResultsEnvelope;
-import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
 import uk.ac.ebi.subs.validator.data.structures.SingleValidationResultStatus;
 
 import java.util.List;
@@ -35,7 +34,7 @@ public class ValidatorListener {
     }
 
     @RabbitListener(queues = BIOSAMPLES_SAMPLE_VALIDATION)
-    public void handleValidationRequest(ValidationMessageEnvelope<Sample> envelope) {
+    public void handleValidationRequest(SampleValidationMessageEnvelope envelope) {
         logger.info("Received validation request on sample with id {}", envelope.getEntityToValidate().getId());
 
         SingleValidationResultsEnvelope singleValidationResultsEnvelope = validator.validateSample(envelope);
@@ -51,5 +50,4 @@ public class ValidatorListener {
             rabbitMessagingTemplate.convertAndSend(Exchanges.SUBMISSIONS, EVENT_VALIDATION_SUCCESS, envelope);
         }
     }
-
 }
