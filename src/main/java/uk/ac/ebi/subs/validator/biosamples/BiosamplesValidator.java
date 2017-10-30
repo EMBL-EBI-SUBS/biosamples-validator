@@ -12,6 +12,7 @@ import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
 import uk.ac.ebi.subs.validator.data.structures.SingleValidationResultStatus;
 import uk.ac.ebi.subs.validator.data.structures.ValidationAuthor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -27,9 +28,7 @@ public class BiosamplesValidator {
 
     public final String NAME_MISSING = "A sample must have an alias.";
 
-    private final String MULTIPLE_DATES_ERROR = "A sample must only have ONE release date.";
     private final String MISSING_DATE_VALUE = "A sample must have a release date.";
-    private final String DATE_WRONG_FORMAT = "The release date must comply with ISO 8601";
 
     private final String SAMPLE_RELATIONSHIP_NULL = "When present, a SampleRelationship must not be null.";
     private final String SAMPLE_RELATIONSHIP_NATURE_MISSING = "A SampleRelationship must have a RelationshipNature.";
@@ -76,36 +75,14 @@ public class BiosamplesValidator {
      * @param sample
      */
     private SingleValidationResult validateReleaseDate(Sample sample) {
-        List<Attribute> attributes = sample.getAttributes();
         SingleValidationResult singleValidationResult = generateDefaultSingleValidationResult(sample.getId());
 
-        // FIXME - This is a temporary solution, it will be changed once the release date is an actual field and not an attribute.
-        List<Attribute> releaseDates = attributes.stream()
-                .filter(
-                attribute -> attribute.getName().toLowerCase().equals("release"))
-                .collect(Collectors.toList());
+        LocalDate releaseDate = sample.getReleaseDate();
 
-        if (releaseDates.size() > 1) {
-            singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
-            singleValidationResult.setMessage(MULTIPLE_DATES_ERROR);
-            return singleValidationResult;
-        }
-
-        if (releaseDates.isEmpty() || (releaseDates.get(0) != null && (releaseDates.get(0).getValue() == null || releaseDates.get(0).getValue().isEmpty()))) {
+        if (releaseDate == null) {
             singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
             singleValidationResult.setMessage(MISSING_DATE_VALUE);
             return singleValidationResult;
-        }
-
-
-        String releaseDate = releaseDates.get(0).getValue();
-        try {
-            DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-            LocalDateTime.parse(releaseDate, formatter);
-        } catch (Exception e) {
-            logger.debug("Invalid date format: " + releaseDate);
-            singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
-            singleValidationResult.setMessage(DATE_WRONG_FORMAT + ": " + e.getMessage());
         }
 
         return singleValidationResult;

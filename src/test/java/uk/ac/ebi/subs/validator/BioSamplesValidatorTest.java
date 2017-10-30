@@ -62,7 +62,7 @@ public class BioSamplesValidatorTest {
 
     @Test
     public void missingReleaseDateTest() {
-        sample = generateSample("sampleAlias", "");
+        sample = generateSample("sampleAlias", null);
         envelope = generateValidationMessageEnvelope(sample);
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
@@ -106,7 +106,7 @@ public class BioSamplesValidatorTest {
 
     @Test
     public void multipleWarningAndErrorsTest() {
-        sample = generateSample("", "");
+        sample = generateSample("", null);
         sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "created from")));
         envelope = generateValidationMessageEnvelope(sample);
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
