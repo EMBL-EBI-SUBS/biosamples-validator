@@ -8,6 +8,7 @@ import uk.ac.ebi.subs.validator.data.ValidationMessageEnvelope;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,9 +25,8 @@ public class TestUtils {
         sample.setReleaseDate(releaseDate);
 
         Attribute att = new Attribute();
-        att.setName("update");
         att.setValue(update);
-        sample.getAttributes().add(att);
+        sample.getAttributes().put("update", Collections.singletonList(att));
 
         sample.setSampleRelationships(relationships);
         return sample;
@@ -39,9 +39,8 @@ public class TestUtils {
         sample.setReleaseDate(releaseDate);
 
         Attribute att = new Attribute();
-        att.setName("update");
         att.setValue(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
-        sample.getAttributes().add(att);
+        sample.getAttributes().put("update", Collections.singletonList(att));
 
         return sample;
     }
