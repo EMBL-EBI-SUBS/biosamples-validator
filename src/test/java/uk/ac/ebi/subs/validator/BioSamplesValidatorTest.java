@@ -101,7 +101,7 @@ public class BioSamplesValidatorTest {
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
         Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Error));
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith("A SampleRelationship must have a sample accession target."));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith("A SampleRelationship must have a target sample accession or alias."));
     }
 
     @Test
