@@ -120,7 +120,7 @@ public class BiosamplesValidator {
             }
 
             // Check for target
-            if (sampleRelationship.getAccession() == null || sampleRelationship.getAccession().isEmpty()) {
+            if (noAccession(sampleRelationship) && noAlias(sampleRelationship)) {
                 singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
                 singleValidationResult.setMessage(SAMPLE_RELATIONSHIP_TARGET_MISSING);
                 return;
@@ -136,6 +136,14 @@ public class BiosamplesValidator {
             singleValidationResult.setValidationStatus(SingleValidationResultStatus.Error);
             singleValidationResult.setMessage(SAMPLE_RELATIONSHIP_NULL);
         }
+    }
+
+    private boolean noAccession(SampleRelationship sampleRelationship) {
+        return sampleRelationship.getAccession() == null || sampleRelationship.getAccession().trim().isEmpty();
+    }
+
+    private boolean noAlias(SampleRelationship sampleRelationship){
+        return sampleRelationship.getAlias() == null || sampleRelationship.getAlias().trim().isEmpty();
     }
 
     private SingleValidationResult generateDefaultSingleValidationResult(String sampleId) {
