@@ -33,7 +33,7 @@ public class BiosamplesValidator {
     private final String SAMPLE_RELATIONSHIP_NULL = "When present, a SampleRelationship must not be null.";
     private final String SAMPLE_RELATIONSHIP_NATURE_MISSING = "A SampleRelationship must have a RelationshipNature.";
     private final String SAMPLE_RELATIONSHIP_NATURE_UNKNOWN = "SampleRelationship nature: [%s] unknown, please verify if you wish to proceed.";
-    private final String SAMPLE_RELATIONSHIP_TARGET_MISSING = "A SampleRelationship must have a sample accession target.";
+    private final String SAMPLE_RELATIONSHIP_TARGET_MISSING = "A SampleRelationship must have a target sample accession or alias.";
 
     public SingleValidationResultsEnvelope validateSample(ValidationMessageEnvelope envelope) {
         Sample sample = (Sample) envelope.getEntityToValidate();
