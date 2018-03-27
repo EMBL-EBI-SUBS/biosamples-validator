@@ -45,10 +45,11 @@ public class TestUtils {
         return sample;
     }
 
-    public static SampleRelationship generateSampleRelationship(String accession, String nature) {
+    public static SampleRelationship generateSampleRelationship(String accession, String nature, String alias) {
         SampleRelationship relationship = new SampleRelationship();
         relationship.setAccession(accession);
         relationship.setRelationshipNature(nature);
+        relationship.setAlias(alias);
         return relationship;
     }
 

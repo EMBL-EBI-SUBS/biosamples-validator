@@ -73,7 +73,7 @@ public class BioSamplesValidatorTest {
 
     @Test
     public void missingRelationshipNatureTest() {
-        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "")));
+        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "",null)));
         envelope = generateValidationMessageEnvelope(sample);
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
@@ -84,7 +84,7 @@ public class BioSamplesValidatorTest {
 
     @Test
     public void unknownRelationshipNatureTest() {
-        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "created from")));
+        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "created from",null)));
         envelope = generateValidationMessageEnvelope(sample);
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
@@ -94,20 +94,31 @@ public class BioSamplesValidatorTest {
     }
 
     @Test
-    public void missingRelationshipTargeTest() {
-        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship(null, "derived from")));
+    public void missingRelationshipTargetTest() {
+        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship(null, "derived from",null)));
         envelope = generateValidationMessageEnvelope(sample);
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
         Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
         Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Error));
-        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith("A SampleRelationship must have a sample accession target."));
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getMessage().startsWith("A SampleRelationship must have a target sample accession or alias."));
     }
+
+    @Test
+    public void sampleRelationshipWithAliasTargetTest() {
+        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship(null, "derived from","foo")));
+        envelope = generateValidationMessageEnvelope(sample);
+        SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
+
+        Assert.assertEquals(1, validationResultsEnvelope.getSingleValidationResults().size());
+        Assert.assertTrue(validationResultsEnvelope.getSingleValidationResults().get(0).getValidationStatus().equals(SingleValidationResultStatus.Pass));
+    }
+
 
     @Test
     public void multipleWarningAndErrorsTest() {
         sample = generateSample("", null);
-        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "created from")));
+        sample.setSampleRelationships(Arrays.asList(generateSampleRelationship("SAM12345", "created from",null)));
         envelope = generateValidationMessageEnvelope(sample);
         SingleValidationResultsEnvelope validationResultsEnvelope = validator.validateSample(envelope);
 
