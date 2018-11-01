@@ -20,6 +20,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * A Spring @Service component to validate sample.
+ * It validates the sample's alias, release date and its relationships to other samples
+ * that already exists in BioSamples database.
+ */
 @Service
 public class BiosamplesValidator {
     private static Logger logger = LoggerFactory.getLogger(BiosamplesValidator.class);
@@ -51,7 +56,6 @@ public class BiosamplesValidator {
         } else {
             return generateSingleValidationResultsEnvelope(Arrays.asList(generateDefaultSingleValidationResult(sample.getId())), envelope);
         }
-
     }
 
     /**
