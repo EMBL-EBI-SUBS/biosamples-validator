@@ -19,6 +19,11 @@ import static uk.ac.ebi.subs.validator.biosamples.messaging.BiosamplesValidatorQ
 import static uk.ac.ebi.subs.validator.biosamples.messaging.BiosamplesValidatorRoutingKeys.EVENT_VALIDATION_ERROR;
 import static uk.ac.ebi.subs.validator.biosamples.messaging.BiosamplesValidatorRoutingKeys.EVENT_VALIDATION_SUCCESS;
 
+/**
+ * This is a listener to handle the validation of a sample.
+ * It executes a validator against the BioSamples' standard.
+ * It sends a success or error message after the validation has been executed.
+ */
 @Service
 public class ValidatorListener {
     private static Logger logger = LoggerFactory.getLogger(ValidatorListener.class);
