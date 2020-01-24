@@ -43,12 +43,11 @@ repositories {
 
 dependencies {
 
-    compile ("uk.ac.ebi.subs:validator-common:3.14.0-SNAPSHOT") {
-        exclude group: 'org.springframework.boot', module :'spring-boot-starter-data-mongodb'
-    }
+    compile ("uk.ac.ebi.subs:validator-common:3.14.0-SNAPSHOT")
     compile("uk.ac.ebi.subs:subs-messaging:0.6.0-SNAPSHOT")
 
     compile("org.springframework.boot:spring-boot-starter")
+    compile("org.springframework.boot:spring-boot-starter-amqp")
     compile 'de.codecentric:spring-boot-admin-starter-client:1.5.7'
 
     compile("de.siegmar:logback-gelf:1.1.0")
