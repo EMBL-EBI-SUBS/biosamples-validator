@@ -1,6 +1,3 @@
-group 'uk.ac.ebi.subs'
-version '1.1.3'
-
 buildscript {
     repositories {
         mavenCentral()
@@ -12,13 +9,22 @@ buildscript {
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'maven'
-apply plugin: 'org.hidetake.ssh'
+plugins {
+    id 'java-library'
+    id 'com.sourcemuse.mongo' version '1.0.0'
+    id 'org.hidetake.ssh' version "1.1.3"
+    id 'org.springframework.boot' version '1.5.21.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'application'
+}
 
-sourceCompatibility = 1.8
+group 'uk.ac.ebi.subs'
+version '1.2.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
 
 ext.gradle_env = hasProperty('env') ? env : 'dev'
 
@@ -37,61 +43,16 @@ repositories {
 
 dependencies {
 
-    compile ("uk.ac.ebi.subs:validator-common:2.5.1-SNAPSHOT") {
-        exclude group: 'org.springframework.boot', module :'spring-boot-starter-data-mongodb'
-    }
-    compile("uk.ac.ebi.subs:subs-messaging:0.4.0-SNAPSHOT")
+    compile ("uk.ac.ebi.subs:validator-common:3.14.0-SNAPSHOT")
+    compile("uk.ac.ebi.subs:subs-messaging:0.6.0-SNAPSHOT")
 
     compile("org.springframework.boot:spring-boot-starter")
+    compile("org.springframework.boot:spring-boot-starter-amqp")
     compile 'de.codecentric:spring-boot-admin-starter-client:1.5.7'
 
     compile("de.siegmar:logback-gelf:1.1.0")
     
     testCompile("org.springframework.boot:spring-boot-starter-test")
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
-                if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-            }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
-                if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-
-            }
-
-            pom.project {
-                packaging 'jar'
-                url 'https://github.com/EMBL-EBI-SUBS/biosamples-validator'
-
-                scm {
-                    url 'https://github.com/EMBL-EBI-SUBS/biosamples-validator.git'
-                }
-
-                licenses {
-                    license {
-                        name 'The Apache License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id 'subs-internal'
-                        name 'EMBL-EBI-SUBS'
-                        email 'subs-internal@ebi.ac.uk'
-                    }
-                }
-            }
-        }
-    }
 }
 
 ssh.settings {
@@ -110,7 +71,6 @@ task printJarName {
     doLast {
         println "$jar.archivePath.name"
     }
-
 }
 
 task printJarFullPath {
